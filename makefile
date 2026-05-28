@@ -9,7 +9,7 @@ QEMU = qemu-system-aarch64
 QEMU_FLAGS = -M virt -cpu cortex-a53 -nographic -s -kernel
 
 BUILD_DIR = ./build
-TARGET = $(BUILD_DIR)/output.elf
+TARGET = $(BUILD_DIR)/nduva.elf
 
 # List your actual source files here
 CSRCS = main.c
