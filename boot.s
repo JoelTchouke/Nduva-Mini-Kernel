@@ -1,2 +1,4 @@
-.global _start:
-    jmp _start
+.global _start
+
+_start:
+    b _start
