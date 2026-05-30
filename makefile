@@ -2,7 +2,7 @@ CC = aarch64-elf-gcc
 AS = aarch64-elf-as
 LD = aarch64-elf-ld
 
-CFLAGS = -ffreestanding -nostdlib -O2 -Wall -Wextra -Werror -mgeneral-regs-only -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -g
+CFLAGS = -ffreestanding -nostdlib -O2 -Wall -Wextra -Werror -mgeneral-regs-only -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -g -I..
 LDFLAGS = -T linker.ld -nostdlib
 
 QEMU = qemu-system-aarch64
@@ -12,11 +12,16 @@ BUILD_DIR = ./build
 TARGET = $(BUILD_DIR)/nduva.elf
 
 # List your actual source files here
-CSRCS = main.c
+CSRCS = main.c \
+        $(wildcard drivers/*.c) \
+        $(wildcard libs/*.c)
 ASRCS = boot.S
 
 # Automatically map source files to object files in the build directory
-OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(CSRCS)) $(patsubst %.S,$(BUILD_DIR)/%.o,$(ASRCS))
+OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(CSRCS:.c=.o) $(ASRCS:.S=.o)))
+
+# THE FIX: Tell Make where to look for raw .c and .S files
+VPATH = drivers libs
 
 .PHONY: all clean run
 
@@ -27,7 +32,7 @@ $(TARGET): $(OBJS)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $(TARGET)
 
-# Compilation rule for C files
+# Unified rule for ALL C files (main.c, uartDriver.c, nduvaiolib.c)
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
