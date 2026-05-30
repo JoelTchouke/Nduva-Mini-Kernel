@@ -1,49 +1,64 @@
-CC = aarch64-elf-gcc
-AS = aarch64-elf-as
-LD = aarch64-elf-ld
+IMAGE_NAME = aarch64-build-env
 
-CFLAGS = -ffreestanding -nostdlib -O2 -Wall -Wextra -Werror -mgeneral-regs-only -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -g -I..
-LDFLAGS = -T linker.ld -nostdlib
+# Check if we are running inside the Docker container
+ifdef AM_I_IN_A_CONTAINER
+    # =========================================================================
+    # INSIDE DOCKER: COMPILATION ENVIRONMENT
+    # =========================================================================
+    CC = aarch64-linux-gnu-gcc
+    AS = aarch64-linux-gnu-as
+    LD = aarch64-linux-gnu-ld
 
-QEMU = qemu-system-aarch64
-QEMU_FLAGS = -M virt -cpu cortex-a53 -nographic -s -kernel
+    CFLAGS = -ffreestanding -nostdlib -O2 -Wall -Wextra -Werror -mgeneral-regs-only -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -g -I/workspace
+    LDFLAGS = -T linker.ld -nostdlib
 
-BUILD_DIR = ./build
-TARGET = $(BUILD_DIR)/nduva.elf
+    BUILD_DIR = ./build
+    TARGET = $(BUILD_DIR)/nduva.elf
 
-# List your actual source files here
-CSRCS = main.c \
-        $(wildcard drivers/*.c) \
-        $(wildcard libs/*.c)
-ASRCS = boot.S
+    CSRCS = main.c \
+			$(wildcard drivers/*.c) \
+			$(wildcard libs/*.c)
+    ASRCS = boot.S
+    OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(CSRCS:.c=.o) $(ASRCS:.S=.o)))
+    VPATH = drivers libs
 
-# Automatically map source files to object files in the build directory
-OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(CSRCS:.c=.o) $(ASRCS:.S=.o)))
+    all: $(TARGET)
 
-# THE FIX: Tell Make where to look for raw .c and .S files
-VPATH = drivers libs
+    $(TARGET): $(OBJS)
+		@mkdir -p $(BUILD_DIR)
+		$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $(TARGET)
 
-.PHONY: all clean run
+    $(BUILD_DIR)/%.o: %.c
+		@mkdir -p $(BUILD_DIR)
+		$(CC) $(CFLAGS) -c $< -o $@
 
-all: $(TARGET)
+    $(BUILD_DIR)/%.o: %.S
+		@mkdir -p $(BUILD_DIR)
+		$(CC) $(CFLAGS) -c $< -o $@
 
-# Link step: combines all object files into the final .elf
-$(TARGET): $(OBJS)
-	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $(TARGET)
+    clean:
+		rm -rf $(BUILD_DIR)
 
-# Unified rule for ALL C files (main.c, uartDriver.c, nduvaiolib.c)
-$(BUILD_DIR)/%.o: %.c
-	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+else
+    # =========================================================================
+    # OUTSIDE DOCKER: HOST INTERACTION ENVIRONMENT
+    # =========================================================================
+    QEMU = qemu-system-aarch64
+    QEMU_FLAGS = -M virt -cpu cortex-a53 -nographic -s -kernel
+    TARGET = ./build/nduva.elf
 
-# Assembly rule for .S files
-$(BUILD_DIR)/%.o: %.S
-	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+    .PHONY: all clean run
 
-clean:
-	rm -rf $(BUILD_DIR)
+    # Redirect build to Docker
+    all:
+		docker run --rm -e AM_I_IN_A_CONTAINER=true -v "$$(pwd)":/workspace $(IMAGE_NAME) make all
 
-run: $(TARGET)
-	$(QEMU) $(QEMU_FLAGS) $(TARGET)
+    # Redirect clean to Docker
+    clean:
+		docker run --rm -e AM_I_IN_A_CONTAINER=true -v "$$(pwd)":/workspace $(IMAGE_NAME) make clean
+
+    # Compile via Docker FIRST, then boot QEMU directly on your host machine
+    run: all
+		$(QEMU) $(QEMU_FLAGS) $(TARGET)
+
+endif

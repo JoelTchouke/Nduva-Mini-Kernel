@@ -1,12 +1,7 @@
-#include "Nduva-Mini-Kernel/includes/libs/nduvaiolib.h"
+#include <includes/libs/nduvaiolib.h>
 
 int nduva_main(void)
 {
-    int i = 0;
-    while(i < 1000000000)
-    {
-        kprint("Joel\n");
-        i++;
-    }
+    kprint("Booting Nduva Mini Kernel...\n");
     return 0;
 }

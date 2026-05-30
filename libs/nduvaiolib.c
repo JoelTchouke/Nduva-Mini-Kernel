@@ -1,4 +1,4 @@
-#include "Nduva-Mini-Kernel/includes/libs/nduvaiolib.h"
+#include "includes/libs/nduvaiolib.h"
 
 void kprint(char * buffer)
 {
