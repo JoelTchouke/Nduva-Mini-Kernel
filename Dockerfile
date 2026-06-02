@@ -5,7 +5,6 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install build tools and the AArch64 cross-compiler
-# Install build tools and the AArch64 cross-compiler
 RUN apt update && apt install -y \
     build-essential \
     gcc-aarch64-linux-gnu \
