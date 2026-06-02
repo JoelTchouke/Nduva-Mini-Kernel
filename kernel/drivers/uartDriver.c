@@ -1,4 +1,4 @@
-#include "includes/drivers/uartDriver.h"
+#include "kernel/includes/drivers/uartDriver.h"
 
 #define BAUD_RATE 115200
 #define CLOCK_SPEED 24 //MHZ

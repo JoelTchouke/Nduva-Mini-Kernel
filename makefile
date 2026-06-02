@@ -15,12 +15,12 @@ ifdef AM_I_IN_A_CONTAINER
     BUILD_DIR = ./build
     TARGET = $(BUILD_DIR)/nduva.elf
 
-    CSRCS = main.c \
-			$(wildcard drivers/*.c) \
-			$(wildcard libs/*.c)
+    CSRCS = kernel/main.c \
+			$(wildcard kernel/drivers/*.c) \
+			$(wildcard user/libs/*.c)
     ASRCS = boot.S
     OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(CSRCS:.c=.o) $(ASRCS:.S=.o)))
-    VPATH = drivers libs
+    VPATH = $(sort $(dir $(CSRCS)))
 
     all: $(TARGET)
 
@@ -51,7 +51,7 @@ else
 
     # Redirect build to Docker
     all:
-		docker run --rm -e AM_I_IN_A_CONTAINER=true -v "$$(pwd)":/workspace $(IMAGE_NAME) make all
+		docker run --rm -e AM_I_IN_A_CONTAINER=true -v "$$(pwd)":/workspace $(IMAGE_NAME) make all --debug=v
 
     # Redirect clean to Docker
     clean:
