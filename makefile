@@ -17,8 +17,11 @@ ifdef AM_I_IN_A_CONTAINER
 
     CSRCS = kernel/main.c \
 			$(wildcard kernel/drivers/*.c) \
-			$(wildcard user/libs/*.c)
-    ASRCS = boot.S
+      $(wildcard kernel/traps/*.c) \
+      $(wildcard user/libs/*.c) \
+
+    ASRCS = boot.S \
+          $(wildcard kernel/traps/*.S)
     OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(CSRCS:.c=.o) $(ASRCS:.S=.o)))
     VPATH = $(sort $(dir $(CSRCS)))
 

@@ -2,6 +2,6 @@
 
 int nduva_main(void)
 {
-    kprint("Booting Nduva Mini Kernel...\n");
+    kprint();
     return 0;
 }

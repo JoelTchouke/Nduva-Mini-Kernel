@@ -1,11 +1,7 @@
+#include "kernel/includes/traps/syscalls.h"
 #include "user/includes/libs/nduvaiolib.h"
 
-void kprint(char * buffer)
+void kprint()
 {
-    if (buffer == NULL) return;
-    while (*buffer != '\0')
-    {
-        uart_write_char(*buffer);
-        buffer++;
-    }
+    sys_write();
 }
